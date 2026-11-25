@@ -42,8 +42,9 @@ DEB_ONLY="false"
 
 UPSTREAM_ORGANIZATION="ONLYOFFICE"
 
-SERVER_CUSTOM_COMMITS="35fda010a253c42344c08857424aa50c48f7eb8a"
-WEB_APPS_CUSTOM_COMMITS="140ef6d1d687532dcb03b05912838b8b4cf161a3"
+SERVER_CUSTOM_COMMITS="0f0fd43d2620007779467e1f8a740d9577f984cb"
+WEB_APPS_CUSTOM_COMMITS="b4786d20e2855fc8057cde621076132838bc5517"
+BUILD_TOOLS_CUSTOM_COMMITS="9bcbdc895b2930a76aa09a43216fdfee62c5b2b2"
 
 # Check the arguments.
 for option in "$@"; do
@@ -211,20 +212,17 @@ build_oo_binaries() {
   prepare_custom_repo "server" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${SERVER_CUSTOM_COMMITS}
   prepare_custom_repo "web-apps" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${WEB_APPS_CUSTOM_COMMITS}
 
-  git clone \
-    --depth=1 \
-    --recursive \
-    --branch ${_UPSTREAM_TAG} \
-    https://github.com/${UPSTREAM_ORGANIZATION}/build_tools.git \
-    build_tools
-  # Ignore detached head warning
+  prepare_custom_repo "build_tools" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${BUILD_TOOLS_CUSTOM_COMMITS}
+
   cd build_tools
   mkdir ${_OUT_FOLDER}
   docker build --tag onlyoffice-document-editors-builder .
   docker run -e PRODUCT_VERSION=${_PRODUCT_VERSION} -e BUILD_NUMBER=${_BUILD_NUMBER} -e NODE_ENV='production' -v $(pwd)/${_OUT_FOLDER}:/build_tools/out -v $(pwd)/../server:/server -v $(pwd)/../web-apps:/web-apps onlyoffice-document-editors-builder /bin/bash -c '\
     cd tools/linux && \
     python3 ./automate.py --branch=tags/'"${_UPSTREAM_TAG}"
+  _docker_run_exit_value=$?
   cd ..
+  return ${_docker_run_exit_value}
 
 }
 
@@ -242,7 +240,7 @@ fi
 if [ "${BUILD_DEB}" == "true" ] ; then
   if [ ${build_oo_binaries_exit_value} -eq 0 ] ; then
     cd deb_build
-    docker build --tag onlyoffice-deb-builder . -f Dockerfile-manual-debian-11
+    docker build --tag onlyoffice-deb-builder . -f Dockerfile-manual-debian-12
     docker run \
       --env PRODUCT_VERSION=${PRODUCT_VERSION} \
       --env BUILD_NUMBER=${BUILD_NUMBER} \
