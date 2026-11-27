@@ -45,6 +45,7 @@ UPSTREAM_ORGANIZATION="ONLYOFFICE"
 SERVER_CUSTOM_COMMITS="0f0fd43d2620007779467e1f8a740d9577f984cb"
 WEB_APPS_CUSTOM_COMMITS="dee466317ba177de63c32cca87d522d8b4452f25 5d652db77f2051bb62bd3b3225531fde82ab0f82 6efd1bbe14433b9915eb26a984453a42e9c430b3 a7ccc2b81cd08183eb56fae854c9d735d3618846 c4a21eb1b8d03f34657700220e467acf23d91a6d 9ff65937aa05ccabc6af62106ce3c702163c6558 854fdbd1601ad0035a8c012b82a5fbf8e29ea65b bbb1d7d1db8b9583c22f7cb663cfb5f4309b1f1a 069ddbbc15371382fb98cb912b11b27f9134f721 de85be0ea969724ad755838d1762797160301520 a390b23156845c47af07fc17cf59d08b5cbf3ad7 9f0ec54f4aa5cbe16d18ceb8fe15a82ea94f8f53 99e700fae5827f14678c31e71128953ebee60e16"
 BUILD_TOOLS_CUSTOM_COMMITS="9bcbdc895b2930a76aa09a43216fdfee62c5b2b2"
+SDKJS_CUSTOM_COMMITS="9d445792ad06cbb8ff3510c0a891fbdbf972d9f8"
 
 # Check the arguments.
 for option in "$@"; do
@@ -211,13 +212,14 @@ build_oo_binaries() {
 
   prepare_custom_repo "server" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${SERVER_CUSTOM_COMMITS}
   prepare_custom_repo "web-apps" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${WEB_APPS_CUSTOM_COMMITS}
+  prepare_custom_repo "sdkjs" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${SDKJS_CUSTOM_COMMITS}
 
   prepare_custom_repo "build_tools" "${_UPSTREAM_TAG}" "${_UNLIMITED_ORGANIZATION}" ${BUILD_TOOLS_CUSTOM_COMMITS}
 
   cd build_tools
   mkdir ${_OUT_FOLDER}
   docker build --tag onlyoffice-document-editors-builder .
-  docker run -e PRODUCT_VERSION=${_PRODUCT_VERSION} -e BUILD_NUMBER=${_BUILD_NUMBER} -e NODE_ENV='production' -v $(pwd)/${_OUT_FOLDER}:/build_tools/out -v $(pwd)/../server:/server -v $(pwd)/../web-apps:/web-apps onlyoffice-document-editors-builder /bin/bash -c '\
+  docker run -e PRODUCT_VERSION=${_PRODUCT_VERSION} -e BUILD_NUMBER=${_BUILD_NUMBER} -e NODE_ENV='production' -v $(pwd)/${_OUT_FOLDER}:/build_tools/out -v $(pwd)/../server:/server -v $(pwd)/../web-apps:/web-apps -v $(pwd)/../sdkjs:/sdkjs onlyoffice-document-editors-builder /bin/bash -c '\
     cd tools/linux && \
     python3 ./automate.py --branch=tags/'"${_UPSTREAM_TAG}"
   _docker_run_exit_value=$?
