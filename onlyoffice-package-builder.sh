@@ -218,7 +218,8 @@ build_oo_binaries() {
 
   cd build_tools
   mkdir ${_OUT_FOLDER}
-  docker build --tag onlyoffice-document-editors-builder .
+  # --no-cache: a cached "apt-get update" layer goes stale when Ubuntu replaces packages (404 -> deps missing)
+  docker build --pull --no-cache --tag onlyoffice-document-editors-builder .
   docker run -e PRODUCT_VERSION=${_PRODUCT_VERSION} -e BUILD_NUMBER=${_BUILD_NUMBER} -e NODE_ENV='production' -v $(pwd)/${_OUT_FOLDER}:/build_tools/out -v $(pwd)/../server:/server -v $(pwd)/../web-apps:/web-apps -v $(pwd)/../sdkjs:/sdkjs onlyoffice-document-editors-builder /bin/bash -c '\
     cd tools/linux && \
     python3 ./automate.py --branch=tags/'"${_UPSTREAM_TAG}"
